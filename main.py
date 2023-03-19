@@ -6,7 +6,7 @@ import json
 
 
 def main():
-    st.title("Информация о каждом дне полёта.")
+    st.title("Информация о каждом перелёте.")
     data_update()
 
 
@@ -56,8 +56,7 @@ def data_update():
             rez = d
         dist = 0
 
-
-    for i in range(6):
+    for i in range(len(distance)):
         with con:
             con.execute(points_sql, (distance[i][1], ) + (SH[i][1], ))
 
