@@ -1,5 +1,4 @@
 import json
-
 import requests
 import sqlite3 as sl
 import streamlit as st
@@ -13,8 +12,7 @@ def session():
             if i[0] == 0:
                 con.execute("""
                     CREATE TABLE points (
-                    date TEXT,
-                    time TEXT PRIMARY KEY,
+                    day REAL,
                     distance REAL,
                     SH REAL
                     );
@@ -30,24 +28,23 @@ def stop_session():
 
 def data_update():
     con = session()
-    points_sql = 'INSERT INTO points (date, time, distance, SH) values(?, ?, ?, ?)'
+    points_sql = 'INSERT INTO points (date, time, distance, SH) values(?, ?, ?)'
     distance = [0] * 6
     SH = [0] * 6
     response = requests.get("https://dt.miet.ru/ppo_it_final",
                             headers={"X-Auth-Token": "xutgb523"})
     data = json.loads(response.text)
-    print(data['message'])
     k = 0
     for i in data['message']:
+        k1 = 0
         for j in i['points']:
-            distance[k] = i[j]
-            SH[k] = i[j]
+            distance[k] = j['distance']
+            SH[k] = j['SH']
+            k1, k = k1 + 1, k + 1
 
-    print()
+    print(distance)
+    print(SH)
 
 
-response = requests.get("https://dt.miet.ru/ppo_it_final",
-                                headers={"X-Auth-Token": "xutgb523"})
-print(response.text)
 
 data_update()
