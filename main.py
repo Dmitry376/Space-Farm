@@ -11,7 +11,7 @@ def main():
 
 
 def session():
-    con = sl.connect('data_.db')
+    con = sl.connect('data.db')
     with con:
         sql_data = con.execute("select count(*) from sqlite_master where type='table' and name='points'")
         for i in sql_data:
