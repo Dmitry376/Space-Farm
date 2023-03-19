@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 
 def session():
-    con = sl.connect('data.db')
+    con = sl.connect('data_.db')
     with con:
         sql_data = con.execute("select count(*) from sqlite_master where type='table' and name='points'")
         for i in sql_data:
@@ -32,16 +32,14 @@ def data_update():
     SH = [0] * 6
     response = requests.get("https://dt.miet.ru/ppo_it_final",
                             headers={"X-Auth-Token": "xutgb523"})
-    print(response.text)
-
     data = json.loads(response.text)
     k, d, minn, rez = 0, 0, 99999999999, 0
     for i in data['message']:
         k1, dist = 0, 0
         d += 1
         for j in i['points']:
-            distance[k] = j['distance']
-            SH[k] = j['SH']
+            distance[k] = (d, j['distance'])
+            SH[k] = (d, j['SH'])
             dist += j['distance']
             k1, k = k1 + 1, k + 1
         if dist < minn:
@@ -49,15 +47,23 @@ def data_update():
             rez = d
         dist = 0
 
+
+    for i in range(6):
+        with con:
+            con.execute(points_sql, (distance[i][1], ) + (SH[i][1], ))
+
+    SH_df = table_to_df("points")
+    sl.dataframe(data=SH_df, use_container_width=True)
+
     return distance, SH
 
+
+def table_to_df(table_name):
+    # Эта функция преобразует данные из указанной таблицы в базе данных в фрейм данных Pandas
+    # Функция принимает параметр 'table_name', который представляет собой строку, указывающую имя таблицы
+    # Функция возвращает фрейм данных Pandas, содержащий данные из указанной таблицы
+    return pd.read_sql_query("select * from " + table_name, session())
+
+
+stop_session()
 data_update()
-
-
-E = [T // i + int(T % i != 0) for i in range(1, T + 1)]
-
-n = 8
-for i in range(T):
-    k = c / n - n
-    n = c
-    M = 192 + n
