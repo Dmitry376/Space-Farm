@@ -33,11 +33,7 @@ def data_update():
     response = requests.get("https://dt.miet.ru/ppo_it_final",
                             headers={"X-Auth-Token": "xutgb523"})
     print(response.text)
-    n = 8
-for i in range(T):
-    k = c / n - n
-    n = c
-    M = 192 + n
+
     data = json.loads(response.text)
     k, d, minn, rez = 0, 0, 99999999999, 0
     for i in data['message']:
@@ -59,3 +55,9 @@ data_update()
 
 
 E = [T // i + int(T % i != 0) for i in range(1, T + 1)]
+
+n = 8
+for i in range(T):
+    k = c / n - n
+    n = c
+    M = 192 + n
