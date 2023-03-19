@@ -1,28 +1,74 @@
 import requests
-import sqlite3
+import sqlite3 as sl
 import streamlit as st
 import pandas as pd
 import json
 
 
+def main():
+    st.title("Информация о каждом дне полёта.")
+    data_update()
+
+
+def session():
+    con = sl.connect('data_.db')
+    with con:
+        sql_data = con.execute("select count(*) from sqlite_master where type='table' and name='points'")
+        for i in sql_data:
+            if i[0] == 0:
+                con.execute("""
+                    CREATE TABLE points (
+                    distance REAL,
+                    SH REAL
+                    );
+                    """)
+
+    return con
+
+
+def stop_session():
+    con = session()
+    with con:
+        con.execute("DELETE FROM points")
+    con.close()
+
+
 def data_update():
+    stop_session()
+    con = session()
+    points_sql = 'INSERT INTO points (distance, SH) values(?, ?)'
+    distance = [0] * 6
+    SH = [0] * 6
     response = requests.get("https://dt.miet.ru/ppo_it_final",
                             headers={"X-Auth-Token": "xutgb523"})
+    data = json.loads(response.text)
+    k, d, minn, rez = 0, 0, 99999999999, 0
+    for i in data['message']:
+        k1, dist = 0, 0
+        d += 1
+        for j in i['points']:
+            distance[k] = (d, j['distance'])
+            SH[k] = (d, j['SH'])
+            dist += j['distance']
+            k1, k = k1 + 1, k + 1
+        if dist < minn:
+            minn = dist
+            rez = d
+        dist = 0
 
-    if response.status_code == 200:
-        data = json.loads(response.text)
+
+    for i in range(6):
+        with con:
+            con.execute(points_sql, (distance[i][1], ) + (SH[i][1], ))
+
+    SH_df = table_to_df("points")
+    st.dataframe(data=SH_df, use_container_width=True)
+
+    return distance, SH
 
 
+def table_to_df(table_name):
+    return pd.read_sql_query("select * from " + table_name, session())
 
-def main():
-    st.set_page_config(
-        page_title="Дни",
-        layout="wide")
-
-    resbtn = st.button("Обновить данные")
-    if resbtn:
-        st.experimental_rerun()
-
-    st.title("Данные с датчиков температуры и влажности")
 
 main()
