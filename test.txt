@@ -53,7 +53,7 @@ def data_update():
             con.execute(points_sql, (distance[i][1], ) + (SH[i][1], ))
 
     SH_df = table_to_df("points")
-    sl.dataframe(data=SH_df, use_container_width=True)
+    st.dataframe(data=SH_df, use_container_width=True)
 
     return distance, SH
 
