@@ -12,7 +12,6 @@ def session():
             if i[0] == 0:
                 con.execute("""
                     CREATE TABLE points (
-                    day REAL,
                     distance REAL,
                     SH REAL
                     );
@@ -28,23 +27,27 @@ def stop_session():
 
 def data_update():
     con = session()
-    points_sql = 'INSERT INTO points (date, time, distance, SH) values(?, ?, ?)'
+    points_sql = 'INSERT INTO points (distance, SH) values(?, ?)'
     distance = [0] * 6
     SH = [0] * 6
     response = requests.get("https://dt.miet.ru/ppo_it_final",
                             headers={"X-Auth-Token": "xutgb523"})
+    print(response.text)
     data = json.loads(response.text)
-    k = 0
+    k, d, minn, rez = 0, 0, 99999999999, 0
     for i in data['message']:
-        k1 = 0
+        k1, dist = 0, 0
+        d += 1
         for j in i['points']:
             distance[k] = j['distance']
             SH[k] = j['SH']
+            dist += j['distance']
             k1, k = k1 + 1, k + 1
+        if dist < minn:
+            minn = dist
+            rez = d
+        dist = 0
 
-    print(distance)
-    print(SH)
-
-
+    return distance, SH
 
 data_update()
