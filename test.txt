@@ -1,8 +1,14 @@
-import json
 import requests
 import sqlite3 as sl
 import streamlit as st
 import pandas as pd
+import json
+
+
+def main():
+    st.title("Информация о каждом дне полёта.")
+    data_update()
+
 
 def session():
     con = sl.connect('data_.db')
@@ -19,17 +25,20 @@ def session():
 
     return con
 
+
 def stop_session():
     con = session()
     with con:
         con.execute("DELETE FROM points")
     con.close()
 
+
 def data_update():
+    stop_session()
     con = session()
     points_sql = 'INSERT INTO points (distance, SH) values(?, ?)'
-    distance = [0] * 6
-    SH = [0] * 6
+    distance = [0]
+    SH = [0]
     response = requests.get("https://dt.miet.ru/ppo_it_final",
                             headers={"X-Auth-Token": "xutgb523"})
     data = json.loads(response.text)
@@ -38,15 +47,16 @@ def data_update():
         k1, dist = 0, 0
         d += 1
         for j in i['points']:
-            distance[k] = (d, j['distance'])
-            SH[k] = (d, j['SH'])
+            distance.append((d, j['distance']))
+            SH.append((d, j['SH']))
             dist += j['distance']
             k1, k = k1 + 1, k + 1
         if dist < minn:
             minn = dist
             rez = d
         dist = 0
-
+    del SH[0]
+    del distance[0]
 
     for i in range(6):
         with con:
@@ -59,11 +69,7 @@ def data_update():
 
 
 def table_to_df(table_name):
-    # Эта функция преобразует данные из указанной таблицы в базе данных в фрейм данных Pandas
-    # Функция принимает параметр 'table_name', который представляет собой строку, указывающую имя таблицы
-    # Функция возвращает фрейм данных Pandas, содержащий данные из указанной таблицы
     return pd.read_sql_query("select * from " + table_name, session())
 
 
-stop_session()
-data_update()
+main()
